@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub | Campus Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for a polished look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-300 font-sans selection:bg-violet-500/30 min-h-screen">
+
+    <!-- Navbar (Glassmorphism) -->
+    <nav class="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 shadow-lg">
+        <div class="max-w-6xl mx-auto p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">
+                <i class="fa-solid fa-bolt text-violet-400 mr-2"></i>EventHub
+            </h1>
+            <div class="space-x-2 md:space-x-4 flex items-center text-sm md:text-base">
+                <button onclick="switchTab('discover')" class="text-slate-400 hover:text-white transition font-medium">Discover</button>
+                <button onclick="switchTab('my-events')" id="navMyEvents" class="text-slate-400 hover:text-white transition font-medium hidden">My Events</button>
+                <button onclick="toggleModal('createModal')" class="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-5 py-2 rounded-full font-bold hover:shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-all transform hover:-translate-y-0.5 hidden" id="navCreateBtn">
+                    + Create
+                </button>
+                
+                <!-- Auth Section -->
+                <div id="authSection" class="ml-4 border-l border-slate-700 pl-4 flex items-center">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto p-6 mt-8">
+        
+        <!-- Header & Filters -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <h2 id="pageTitle" class="text-4xl font-extrabold text-white tracking-tight">Discover Events</h2>
+            <div class="flex w-full md:w-auto gap-3">
+                <div class="relative w-full md:w-64">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-500"></i>
+                    <input type="text" id="searchInput" placeholder="Search events..." class="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none shadow-inner text-white placeholder-slate-500 transition" onkeyup="renderEvents()">
+                </div>
+                <select id="categoryFilter" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-slate-300 cursor-pointer transition" onchange="renderEvents()">
+                    <option value="All">All Categories</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Sports">Sports</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Event Grid -->
+        <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <!-- Auth Modal (Dark) -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 hidden flex justify-center items-center z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-sm shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500"></div>
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-2xl font-bold text-white">Initialize Login</h2>
+                <button onclick="toggleModal('authModal')" class="text-slate-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-sm text-slate-400 mb-6">Authenticate to secure your tickets.</p>
+            <form id="authForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="authName" required placeholder="Full Name" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none text-white placeholder-slate-600">
+                </div>
+                <div>
+                    <input type="text" id="authRegNo" required placeholder="Registration No. (e.g. 23BCE1001)" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none text-white placeholder-slate-600 uppercase">
+                </div>
+                <div>
+                    <input type="email" id="authEmail" required placeholder="Campus Email" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none text-white placeholder-slate-600">
+                </div>
+                <div>
+                    <input type="password" id="authPassword" required placeholder="Password" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none text-white placeholder-slate-600">
+                </div>
+                <button type="submit" class="w-full py-3 mt-2 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]">Access Terminal</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Event Modal (Dark) -->
+    <div id="createModal" class="fixed inset-0 bg-black/80 hidden flex justify-center items-center z-50 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-fuchsia-500"></div>
+            <h2 class="text-2xl font-bold mb-6 text-white">Deploy New Event</h2>
+            <form id="createEventForm" onsubmit="handleCreateEvent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Event Name</label>
+                    <input type="text" id="eventName" required class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Category</label>
+                    <select id="eventCategory" class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 text-white cursor-pointer">
+                        <option value="Tech">Tech</option>
+                        <option value="Cultural">Cultural</option>
+                        <option value="Sports">Sports</option>
+                    </select>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Date</label>
+                        <input type="date" id="eventDate" required class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 outline-none text-white" style="color-scheme: dark;">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Location</label>
+                        <input type="text" id="eventLocation" required class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 outline-none text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Description</label>
+                    <textarea id="eventDesc" rows="3" required class="w-full px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none text-white resize-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="toggleModal('createModal')" class="px-5 py-2 text-slate-400 font-medium hover:text-white transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-medium rounded-xl hover:shadow-[0_0_15px_rgba(139,92,246,0.4)] transition">Publish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure & Storage
+        let events = JSON.parse(localStorage.getItem('campus_events')) || [
+            { id: 101, name: "Intro to React.js", category: "Tech", date: "2026-09-20", location: "Computer Lab 1", desc: "Build your first web app with React. Beginners welcome!", registeredCount: 24, isRegistered: false, isSaved: false },
+            { id: 102, name: "Freshers' Dance Off", category: "Cultural", date: "2026-09-25", location: "Main Auditorium", desc: "Show off your moves! Open stage and food stalls.", registeredCount: 112, isRegistered: false, isSaved: false },
+            { id: 103, name: "Inter-Hostel Football", category: "Sports", date: "2026-09-22", location: "Campus Ground A", desc: "Cheer for your hostel in the knockout stages.", registeredCount: 45, isRegistered: false, isSaved: false }
+        ];
+        
+        let currentTab = 'discover';
+        let currentUser = JSON.parse(localStorage.getItem('campus_user')) || null;
+
+        function saveToStorage() {
+            localStorage.setItem('campus_events', JSON.stringify(events));
+            if(currentUser) {
+                localStorage.setItem('campus_user', JSON.stringify(currentUser));
+            } else {
+                localStorage.removeItem('campus_user');
+            }
+        }
+
+        // Auth Logic
+        function updateAuthUI() {
+            const authSection = document.getElementById('authSection');
+            const navMyEvents = document.getElementById('navMyEvents');
+            const navCreateBtn = document.getElementById('navCreateBtn');
+
+            if (currentUser) {
+                authSection.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="text-right leading-tight hidden sm:block">
+                            <span class="block font-bold text-white text-sm">${currentUser.name}</span>
+                            <span class="block text-[10px] text-violet-400 uppercase tracking-widest">${currentUser.regNo}</span>
+                        </div>
+                        <div class="h-8 w-8 rounded-full bg-gradient-to-tr from-violet-500 to-fuchsia-500 flex items-center justify-center font-bold text-white shadow-lg">
+                            ${currentUser.name.charAt(0).toUpperCase()}
+                        </div>
+                        <button onclick="handleLogout()" class="text-slate-500 hover:text-red-400 transition ml-1" title="Disconnect"><i class="fa-solid fa-power-off text-lg"></i></button>
+                    </div>
+                `;
+                navMyEvents.classList.remove('hidden');
+                navCreateBtn.classList.remove('hidden');
+            } else {
+                authSection.innerHTML = `<button onclick="toggleModal('authModal')" class="bg-slate-800 border border-slate-700 px-5 py-2 rounded-xl text-sm font-medium text-white hover:bg-slate-700 hover:border-slate-600 transition shadow-sm">Login</button>`;
+                navMyEvents.classList.add('hidden');
+                navCreateBtn.classList.add('hidden');
+                if (currentTab === 'my-events') switchTab('discover');
+            }
+            renderEvents();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const name = document.getElementById('authName').value.trim();
+            const regNo = document.getElementById('authRegNo').value.trim().toUpperCase();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (name && regNo && email && password) {
+                currentUser = { name, regNo, email };
+                saveToStorage();
+                document.getElementById('authForm').reset();
+                toggleModal('authModal');
+                updateAuthUI();
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            saveToStorage();
+            updateAuthUI();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('pageTitle').innerText = tab === 'discover' ? 'Discover Events' : 'My Terminal';
+            renderEvents();
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
+        function getCalendarLink(event) {
+            const dateStr = event.date.replace(/-/g, '');
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${dateStr}T090000Z/${dateStr}T110000Z&details=${encodeURIComponent(event.desc)}&location=${encodeURIComponent(event.location)}`;
+            return url;
+        }
+
+        window.deleteEvent = function(id) {
+            const confirmDelete = confirm("Warning: You are about to purge this event permanently. Proceed?");
+            if (confirmDelete) {
+                events = events.filter(e => e.id !== id);
+                saveToStorage();
+                renderEvents();
+            }
+        }
+
+        // Core Render Function
+        function renderEvents() {
+            const grid = document.getElementById('eventsGrid');
+            grid.innerHTML = ''; 
+
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            let filteredEvents = events.filter(event => {
+                const matchesSearch = event.name.toLowerCase().includes(searchTerm) || event.desc.toLowerCase().includes(searchTerm);
+                const matchesCategory = categoryFilter === 'All' || event.category === categoryFilter;
+                const matchesTab = currentTab === 'discover' ? true : (event.isRegistered || event.isSaved);
+                return matchesSearch && matchesCategory && matchesTab;
+            });
+
+            if (filteredEvents.length === 0) {
+                grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center text-slate-600 py-20">
+                    <i class="fa-solid fa-ghost text-5xl mb-4 opacity-50"></i>
+                    <p class="text-lg font-medium">No events detected in this sector.</p>
+                </div>`;
+                return;
+            }
+
+            filteredEvents.forEach(event => {
+                const card = document.createElement('div');
+                // Themed Glass Card
+                card.className = "bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 hover:border-violet-500/40 hover:shadow-[0_8px_30px_rgb(139,92,246,0.12)] transition duration-300 transform hover:-translate-y-1 flex flex-col group relative overflow-hidden";
+                
+                // Neon Category Badges
+                let badgeStyle = event.category === 'Tech' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                 event.category === 'Cultural' ? 'bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20' : 
+                                 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                
+                let qrData = `Ticket-${event.id}-${event.name.replace(/ /g,'')}`;
+                if(currentUser) qrData += `-${currentUser.regNo}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}&color=255-255-255&bgcolor=15-23-42`;
+
+                card.innerHTML = `
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-start mb-5 relative z-10">
+                        <span class="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest border ${badgeStyle}">${event.category}</span>
+                        <div class="flex gap-4 items-center">
+                            ${currentUser ? `
+                                <button onclick="deleteEvent(${event.id})" class="text-slate-600 hover:text-red-400 transition outline-none" title="Purge Event">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="toggleSave(${event.id})" class="text-xl outline-none focus:outline-none ${event.isSaved ? 'text-violet-400 drop-shadow-[0_0_8px_rgba(139,92,246,0.8)]' : 'text-slate-700 hover:text-violet-400'} transition-all" title="Bookmark">
+                                <i class="fa-solid fa-bookmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold text-white mb-3 leading-tight relative z-10 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-400 transition-all">${event.name}</h3>
+                    
+                    <div class="text-sm text-slate-400 mb-5 space-y-2 relative z-10">
+                        <div class="flex justify-between items-center bg-slate-950/50 rounded-lg p-2 border border-slate-800/50">
+                            <p><i class="fa-regular fa-calendar text-violet-500 mr-2"></i>${event.date}</p>
+                            <a href="${getCalendarLink(event)}" target="_blank" class="text-[11px] uppercase tracking-wider text-violet-400 hover:text-white transition bg-violet-500/10 px-2 py-1 rounded">Add Cal</a>
+                        </div>
+                        <p class="p-2"><i class="fa-solid fa-location-dot text-violet-500 mr-2"></i>${event.location}</p>
+                    </div>
+                    
+                    <p class="text-slate-400 text-sm mb-6 flex-grow relative z-10 leading-relaxed">${event.desc}</p>
+                    
+                    ${(event.isRegistered && currentUser) ? `
+                        <div class="mb-5 flex items-center gap-4 bg-slate-950 p-3 rounded-xl border border-slate-800 shadow-inner relative z-10">
+                            <img src="${qrUrl}" alt="QR Ticket" class="w-16 h-16 rounded-lg p-1 border 
+border-slate-700">
+                            <div class="text-xs text-slate-400">
+                                <span class="font-bold text-emerald-400 block mb-1 text-sm"><i class="fa-solid fa-check-circle mr-1"></i> Access Granted</span>
+                                <span class="block text-white">${currentUser.name}</span>
+                                <span class="block text-[10px] uppercase tracking-widest text-slate-500 mt-1">${currentUser.regNo}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex items-center justify-between mt-auto pt-5 border-t border-slate-800 relative z-10">
+                        <span class="text-sm font-medium text-slate-500"><i class="fa-solid fa-users mr-2 opacity-50"></i> ${event.registeredCount} Active</span>
+                        <button onclick="attemptRegister(${event.id})" class="px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 ${event.isRegistered ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-white text-slate-900 hover:bg-slate-200 shadow-[0_0_15px_rgba(255,255,255,0.1)]'}">
+                            ${(event.isRegistered && currentUser) ? 'Pass Secured' : 'Register'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.attemptRegister = function(id) {
+            if (!currentUser) {
+                toggleModal('authModal');
+                return;
+            }
+            const event = events.find(e => e.id === id);
+            if (event.isRegistered) {
+                event.isRegistered = false;
+                event.registeredCount--;
+            } else {
+                event.isRegistered = true;
+                event.registeredCount++;
+            }
+            saveToStorage();
+            renderEvents();
+        }
+
+        window.toggleSave = function(id) {
+            if (!currentUser) {
+                toggleModal('authModal');
+                return;
+            }
+            const event = events.find(e => e.id === id);
+            event.isSaved = !event.isSaved;
+            saveToStorage();
+            renderEvents();
+        }
+
+        window.handleCreateEvent = function(e) {
+            e.preventDefault(); 
+            const newEvent = {
+                id: Date.now(), 
+                name: document.getElementById('eventName').value,
+                category: document.getElementById('eventCategory').value,
+                date: document.getElementById('eventDate').value,
+                location: document.getElementById('eventLocation').value,
+                desc: document.getElementById('eventDesc').value,
+                registeredCount: 0,
+                isRegistered: false,
+                isSaved: false
+            };
+            events.unshift(newEvent); 
+            saveToStorage();
+            document.getElementById('createEventForm').reset();
+            toggleModal('createModal'); 
+            switchTab('discover'); 
+        }
+
+        // Initialize UI 
+        updateAuthUI();
+    </script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub | Campus Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <!-- Simple, standard Navbar -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-bold text-indigo-600 flex items-center">
+                <i class="fa-solid fa-calendar-check mr-2"></i>EventHub
+            </h1>
+            <div class="space-x-4 flex items-center text-sm md:text-base">
+                <button onclick="switchTab('discover')" class="text-gray-600 hover:text-indigo-600 font-medium transition">Discover</button>
+                <button onclick="switchTab('my-events')" id="navMyEvents" class="text-gray-600 hover:text-indigo-600 font-medium transition hidden">My Events</button>
+                <button onclick="toggleModal('createModal')" class="bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2 rounded-lg font-medium hover:bg-indigo-100 transition hidden" id="navCreateBtn">
+                    + New Event
+                </button>
+                
+                <!-- Auth Section -->
+                <div id="authSection" class="ml-2 pl-4 border-l border-gray-300 flex items-center">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto p-6 mt-4">
+        
+        <!-- Header & Filters -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h2 id="pageTitle" class="text-2xl font-bold text-gray-900">Discover Events</h2>
+            <div class="flex w-full md:w-auto gap-3">
+                <div class="relative w-full md:w-64">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-gray-700 transition" onkeyup="renderEvents()">
+                </div>
+                <select id="categoryFilter" class="px-4 py-2 bg-white border border-gray-300 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-gray-700 cursor-pointer transition" onchange="renderEvents()">
+                    <option value="All">All Types</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Cultural">Cultural</option>
+                    <option value="Sports">Sports</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Event Grid -->
+        <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <!-- Auth Modal (Clean) -->
+    <div id="authModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-xl border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-900">Student Login</h2>
+                <button onclick="toggleModal('authModal')" class="text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-sm text-gray-500 mb-6">Please log in to register for events.</p>
+            <form id="authForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">FULL NAME</label>
+                    <input type="text" id="authName" required placeholder="e.g. John Doe" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:border-indigo-500 outline-none text-gray-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">REGISTRATION NO.</label>
+                    <input type="text" id="authRegNo" required placeholder="e.g. 23BCE1001" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:border-indigo-500 outline-none text-gray-800 uppercase">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">EMAIL</label>
+                    <input type="email" id="authEmail" required placeholder="student@campus.edu" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:border-indigo-500 outline-none text-gray-800">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">PASSWORD</label>
+                    <input type="password" id="authPassword" required placeholder="••••••••" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:border-indigo-500 outline-none text-gray-800">
+                </div>
+                <button type="submit" class="w-full py-2.5 mt-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Event Modal (Clean) -->
+    <div id="createModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-xl border border-gray-200">
+            <h2 class="text-xl font-bold mb-6 text-gray-900">Create Event</h2>
+            <form id="createEventForm" onsubmit="handleCreateEvent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">EVENT NAME</label>
+                    <input type="text" id="eventName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">CATEGORY</label>
+                    <select id="eventCategory" class="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:border-indigo-500">
+                        <option value="Tech">Tech</option>
+                        <option value="Cultural">Cultural</option>
+                        <option value="Sports">Sports</option>
+                    </select>
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">DATE</label>
+                        <input type="date" id="eventDate" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-indigo-500 outline-none">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">LOCATION</label>
+                        <input type="text" id="eventLocation" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">DESCRIPTION</label>
+                    <textarea id="eventDesc" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-indigo-500 outline-none resize-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="toggleModal('createModal')" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-md transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 transition">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure & Storage
+        let events = JSON.parse(localStorage.getItem('campus_events')) || [
+            { id: 101, name: "Intro to React.js", category: "Tech", date: "2026-09-20", location: "Computer Lab 1", desc: "Build your first web app with React. Beginners welcome!", registeredCount: 24, isRegistered: false, isSaved: false },
+            { id: 102, name: "Freshers' Dance Off", category: "Cultural", date: "2026-09-25", location: "Main Auditorium", desc: "Show off your moves! Open stage and food stalls.", registeredCount: 112, isRegistered: false, isSaved: false },
+            { id: 103, name: "Inter-Hostel Football", category: "Sports", date: "2026-09-22", location: "Campus Ground A", desc: "Cheer for your hostel in the knockout stages.", registeredCount: 45, isRegistered: false, isSaved: false }
+        ];
+        
+        let currentTab = 'discover';
+        let currentUser = JSON.parse(localStorage.getItem('campus_user')) || null;
+
+        function saveToStorage() {
+            localStorage.setItem('campus_events', JSON.stringify(events));
+            if(currentUser) {
+                localStorage.setItem('campus_user', JSON.stringify(currentUser));
+            } else {
+                localStorage.removeItem('campus_user');
+            }
+        }
+
+        // Auth Logic
+        function updateAuthUI() {
+            const authSection = document.getElementById('authSection');
+            const navMyEvents = document.getElementById('navMyEvents');
+            const navCreateBtn = document.getElementById('navCreateBtn');
+
+            if (currentUser) {
+                authSection.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <span class="block font-medium text-gray-900 text-sm leading-tight">${currentUser.name}</span>
+                            <span class="block text-xs text-gray-500 uppercase">${currentUser.regNo}</span>
+                        </div>
+                        <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 transition ml-2" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    </div>
+                `;
+                navMyEvents.classList.remove('hidden');
+                navCreateBtn.classList.remove('hidden');
+            } else {
+                authSection.innerHTML = `<button onclick="toggleModal('authModal')" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition">Log In</button>`;
+                navMyEvents.classList.add('hidden');
+                navCreateBtn.classList.add('hidden');
+                if (currentTab === 'my-events') switchTab('discover');
+            }
+            renderEvents();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const name = document.getElementById('authName').value.trim();
+            const regNo = document.getElementById('authRegNo').value.trim().toUpperCase();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (name && regNo && email && password) {
+                currentUser = { name, regNo, email };
+                saveToStorage();
+                document.getElementById('authForm').reset();
+                toggleModal('authModal');
+                updateAuthUI();
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            saveToStorage();
+            updateAuthUI();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('pageTitle').innerText = tab === 'discover' ? 'Discover Events' : 'My Events';
+            renderEvents();
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
+        function getCalendarLink(event) {
+            const dateStr = event.date.replace(/-/g, '');
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${dateStr}T090000Z/${dateStr}T110000Z&details=${encodeURIComponent(event.desc)}&location=${encodeURIComponent(event.location)}`;
+            return url;
+        }
+
+        window.deleteEvent = function(id) {
+            const confirmDelete = confirm("Are you sure you want to delete this event?");
+            if (confirmDelete) {
+                events = events.filter(e => e.id !== id);
+                saveToStorage();
+                renderEvents();
+            }
+        }
+
+        // Core Render Function
+        function renderEvents() {
+            const grid = document.getElementById('eventsGrid');
+            grid.innerHTML = ''; 
+
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            let filteredEvents = events.filter(event => {
+                const matchesSearch = event.name.toLowerCase().includes(searchTerm) || event.desc.toLowerCase().includes(searchTerm);
+                const matchesCategory = categoryFilter === 'All' || event.category === categoryFilter;
+                const matchesTab = currentTab === 'discover' ? true : (event.isRegistered || event.isSaved);
+                return matchesSearch && matchesCategory && matchesTab;
+            });
+
+            if (filteredEvents.length === 0) {
+                grid.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center text-gray-500 py-16">
+                    <p class="text-lg">No events found.</p>
+                </div>`;
+                return;
+            }
+
+            filteredEvents.forEach(event => {
+                const card = document.createElement('div');
+                // Clean Campus Card Style
+                card.className = "bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition duration-200 flex flex-col relative";
+                
+                let badgeStyle = event.category === 'Tech' ? 'bg-blue-100 text-blue-800' : 
+                                 event.category === 'Cultural' ? 'bg-pink-100 text-pink-800' : 
+                                 'bg-emerald-100 text-emerald-800';
+                
+                let qrData = `Ticket-${event.id}-${event.name.replace(/ /g,'')}`;
+                if(currentUser) qrData += `-${currentUser.regNo}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-md uppercase ${badgeStyle}">${event.category}</span>
+                        <div class="flex gap-3 items-center">
+                            ${currentUser ? `
+                                <button onclick="deleteEvent(${event.id})" class="text-gray-300 hover:text-red-500 transition outline-none" title="Delete">
+                                    <i class="fa-solid fa-trash text-sm"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="toggleSave(${event.id})" class="text-lg outline-none focus:outline-none ${event.isSaved ? 'text-yellow-500' : 'text-gray-300 hover:text-gray-500'} transition-all" title="Save">
+                                <i class="fa-solid fa-bookmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-bold text-gray-900 mb-2 leading-tight">${event.name}</h3>
+                    
+                    <div class="text-sm text-gray-600 mb-4 space-y-1">
+                        <div class="flex justify-between items-center">
+                            <p><i class="fa-regular fa-calendar w-5 text-gray-400"></i>${event.date}</p>
+                            <a href="${getCalendarLink(event)}" target="_blank" class="text-xs text-indigo-600 hover:underline">Add to Cal</a>
+                        </div>
+                        <p><i class="fa-solid fa-location-dot w-5 text-gray-400"></i>${event.location}</p>
+                    </div>
+                    
+                    <p class="text-gray-600 text-sm mb-5 flex-grow">${event.desc}</p>
+                    
+                    ${(event.isRegistered && currentUser) ? `
+                        <div class="mb-5 flex items-center gap-3 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                            <img src="${qrUrl}" alt="QR" class="w-12 h-12 rounded border border-gray-200">
+                            <div class="text-xs text-gray-600">
+                                <span class="font-bold text-green-600 block mb-0.5">Ticket Confirmed</span>
+                                <span class="block font-medium text-gray-800">${currentUser.name}</span>
+                                <span class="block text-gray-500">${currentUser.regNo}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                        <span class="text-sm font-medium text-gray-500"><i class="fa-solid fa-user-group mr-1.5 text-gray-400"></i> ${event.registeredCount} going</span>
+                        <button onclick="attemptRegister(${event.id})" class="px-4 py-2 rounded-md font-medium text-sm transition-all ${event.isRegistered ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-900 text-white hover:bg-gray-800'}">
+                            ${(event.isRegistered && currentUser) ? 'Registered ✓' : 'Register'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.attemptRegister = function(id) {
+            if (!currentUser) {
+                toggleModal('authModal');
+                return;
+            }
+            const event = events.find(e => e.id === id);
+            if (event.isRegistered) {
+                event.isRegistered = false;
+                event.registeredCount--;
+            } else {
+                event.isRegistered = true;
+                event.registeredCount++;
+            }
+            saveToStorage();
+            renderEvents();
+        }
+
+        window.toggleSave = function(id) {
+            if (!currentUser) {
+                toggleModal('authModal');
+                return;
+            }
+            const event = events.find(e => e.id === id);
+            event.isSaved = !event.isSaved;
+            saveToStorage();
+            renderEvents();
+        }
+
+        window.handleCreateEvent = function(e) {
+            e.preventDefault(); 
+            const newEvent = {
+                id: Date.now(), 
+                name: document.getElementById('eventName').value,
+                category: document.getElementById('eventCategory').value,
+                date: document.getElementById('eventDate').value,
+                location: document.getElementById('eventLocation').value,
+                desc: document.getElementById('eventDesc').value,
+                registeredCount: 0,
+                isRegistered: false,
+                isSaved: false
+            };
+            events.unshift(newEvent); 
+            saveToStorage();
+            document.getElementById('createEventForm').reset();
+            toggleModal('createModal'); 
+            switchTab('discover'); 
+        }
+
+        // Initialize UI 
+        updateAuthUI();
+    </script>
+</body>
+</html>
