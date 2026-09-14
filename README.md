@@ -36,6 +36,6 @@ Deployed Links :
 
 CODENEX-CLUB-RECRUITMENT-TASK-2026 - https://adiuwu.github.io/CODENEX-RECRUITMENT-CLUB-TASK-2026/
 
-CODENEX-RECRUITMENT-CLUB-TASK-2026 With Midnight Theme - https://adiuwu.github.io/CODENEX-RECRUITMENT-CLUB-TASK-2026//Club Task With Midnight Theme.html
+CODENEX-RECRUITMENT-CLUB-TASK-2026 With Midnight Theme - https://adiuwu.github.io/CODENEX-RECRUITMENT-CLUB-TASK-2026/Club-Task-With-Midnight-Theme.html
 
    
