@@ -35,5 +35,7 @@ This project includes several extra features to secure brownie points:
 Deployed Links :
 
 CODENEX-CLUB-RECRUITMENT-TASK-2026 - https://adiuwu.github.io/CODENEX-RECRUITMENT-CLUB-TASK-2026/
-CODENEX-RECRUITMENT-CLUB-TASK-2026 With Midnight Theme - 
+
+CODENEX-RECRUITMENT-CLUB-TASK-2026 With Midnight Theme - https://adiuwu.github.io/CODENEX-RECRUITMENT-CLUB-TASK-2026/Club Task With Midnight Theme.html
+
    
